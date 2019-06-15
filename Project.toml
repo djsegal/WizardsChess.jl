@@ -3,6 +3,10 @@ uuid = "37d1f408-8ee4-11e9-2204-5fbade4d0fa8"
 authors = ["djsegal <dansegal2@gmail.com>"]
 version = "0.1.0"
 
+[deps]
+Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+
 [compat]
 julia = "1"
 

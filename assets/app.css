@@ -1,0 +1,74 @@
+.cs-table {
+  margin-top: 4vmin;
+  margin-bottom: 4vmin;
+  margin-left: auto;
+  margin-right: auto;
+  border-width: 2px !important;
+}
+
+.cs-table td {
+  width: 6vmin;
+  height: 6vmin;
+}
+
+.svg-inline--fa {
+  height: 100% !important;
+  width: 100% !important;
+  padding: 20% !important;
+  vertical-align: middle;
+  -webkit-transition: opacity 0.2s;
+  transition: opacity 0.2s;
+  position: absolute;
+  z-index: 3;
+}
+
+.svg-inline--fa:hover {
+  opacity: 0.75;
+}
+
+.cs-white {
+  color: #FAFAFA;
+}
+
+.cs-black {
+  color: #37474F;
+}
+
+.cs-table tr:nth-child(odd):not(:first-child):not(:last-child) td:nth-child(odd):not(:first-child):not(:last-child), .cs-table tr:nth-child(even):not(:first-child):not(:last-child) td:nth-child(even):not(:first-child):not(:last-child) {
+  background-color: #FFCC80;
+}
+
+.cs-table tr:nth-child(odd):not(:first-child):not(:last-child) td:nth-child(even):not(:first-child):not(:last-child), .cs-table tr:nth-child(even):not(:first-child):not(:last-child) td:nth-child(odd):not(:first-child):not(:last-child) {
+  background-color: #4caf50;
+}
+
+.cs-table tr:first-child td, .cs-table tr:last-child td, .cs-table td:first-child, .cs-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cs-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-transition: opacity 0.15s;
+  transition: opacity 0.1s;
+  opacity: 0.0;
+  border-radius: 1.5vmin;
+  z-index: 2;
+  background-color: #E3F2FD;
+}
+
+.cs-overlay.cs-capture {
+  background-color: #F44336;
+  z-index: 4;
+}
+
+.cs-overlay.active {
+  opacity: 0.8;
+}
+
+.cs-tile {
+  position: relative;
+  z-index: 1;
+}
