@@ -50,6 +50,13 @@ mutable struct Player <: AbstractPlayer
   is_white::Bool
   pieces::Vector{Piece}
   game::AbstractGame
+  can_castle_left::Bool
+  can_castle_right::Bool
+  has_castled::Bool
+end
+
+function Player(is_white,game)
+  Player(is_white,[],game,true,true,false)
 end
 
 function Game(window::Window)
@@ -61,8 +68,8 @@ function Game(window::Window)
     window,players,board,true
   )
 
-  white = Player(true,[],game)
-  black = Player(false,[],game)
+  white = Player(true,game)
+  black = Player(false,game)
 
   push!(game.players, white)
   push!(game.players, black)

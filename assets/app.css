@@ -64,6 +64,11 @@
   z-index: 4;
 }
 
+.cs-overlay.cs-castle {
+  background-color: #3F51B5;
+  z-index: 4;
+}
+
 .cs-overlay.active {
   opacity: 0.8;
 }

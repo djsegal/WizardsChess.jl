@@ -112,7 +112,39 @@ module Checkmate
   end
 
   valid_moves(piece::Bishop) = _valid_moves_diagonal(piece)
-  valid_moves(piece::Rook) = _valid_moves_straight(piece)
+
+  function valid_moves(piece::Rook)
+    moves = _valid_moves_straight(piece)
+    ( piece.player.can_castle_left || piece.player.can_castle_right ) || return moves
+    piece.player.has_castled && return moves
+
+    if piece.player.is_white
+      work_i = 1
+    else
+      work_i = 8
+    end
+
+    king = piece.player.pieces[findfirst(work_piece -> isa(work_piece,King), piece.player.pieces)]
+
+    ( piece.row == work_i ) || return moves
+    ( king.row == work_i ) || return moves
+
+    @assert king.col == 5
+
+    if piece.col < king.col
+      j_list = piece.col+1:king.col-1
+    else
+      j_list = king.col+1:piece.col-1
+    end
+
+    for work_j in j_list
+      isnothing(piece.player.game.board[work_i,work_j]) || return moves
+    end
+
+    push!(moves, [king.row,king.col])
+
+    moves
+  end
 
   valid_moves(piece::Queen) = vcat(
     _valid_moves_straight(piece), _valid_moves_diagonal(piece)
@@ -170,6 +202,7 @@ module Checkmate
     work_string = "";
     work_string *= "\$('.cs-overlay').removeClass('active');"
     work_string *= "\$('.cs-overlay').removeClass('cs-capture');"
+    work_string *= "\$('.cs-overlay').removeClass('cs-castle');"
     work_string *= "\$('.svg-inline--fa').remove();"
 
     for i in 1:8
@@ -236,15 +269,30 @@ module Checkmate
       row, col = map(arg -> parse(Int,arg),args)
       moves = valid_moves(game.board[row,col])
 
-      work_string = ""
+      work_string = """
+        var thisIsWhite = \$("#js-row__$(row) #js-col__$(col) .svg-inline--fa").hasClass("cs-white");
+        var thatIsWhite = false;
+        var usedClass = "";
+      """
+
       work_string *= "\$('.cs-overlay').removeClass('active');"
       work_string *= "\$('.cs-overlay').removeClass('cs-capture');"
+      work_string *= "\$('.cs-overlay').removeClass('cs-castle');"
 
       for (i,j) in moves
         work_string *= """
           \$("#js-row__$(i) #js-col__$(j) .cs-overlay").addClass('active');
+
+          thatIsWhite = \$("#js-row__$(i) #js-col__$(j) .svg-inline--fa").hasClass("cs-white");
+
+          if ( thisIsWhite == thatIsWhite ) {
+            usedClass = 'cs-castle';
+          } else {
+            usedClass = 'cs-capture';
+          }
+
           if ( \$("#js-row__$(i) #js-col__$(j) .svg-inline--fa").length > 0 ) {
-            \$("#js-row__$(i) #js-col__$(j) .cs-overlay").addClass('cs-capture');
+            \$("#js-row__$(i) #js-col__$(j) .cs-overlay").addClass(usedClass);
           }
         """
       end
@@ -265,12 +313,52 @@ module Checkmate
 
       game.board[piece_row,piece_col] = nothing
 
+      piece_name = lowercase(last(split(string(typeof(piece)),".")))
       other_piece = game.board[overlay_row,overlay_col]
-      if !isnothing(other_piece)
-        filter!(tmp_piece -> tmp_piece != other_piece, other_piece.player.pieces)
+      if isnothing(other_piece)
+        game.board[overlay_row,overlay_col] = piece
+      else
+        other_piece_name = lowercase(last(split(string(typeof(other_piece)),".")))
+        if piece.player == other_piece.player
+          @assert piece_name == "rook"
+          @assert other_piece_name == "king"
+          @assert piece_col == 1 || piece_col == 8
+
+          game.board[piece.row,piece.col] = nothing
+          game.board[other_piece.row,other_piece.col] = nothing
+
+          if piece_col == 1
+            @assert piece.player.can_castle_left
+            other_piece.col = 3
+            piece.col = 4
+          elseif piece_col == 8
+            @assert piece.player.can_castle_right
+            other_piece.col = 7
+            piece.col = 6
+          end
+
+          game.board[piece.row,piece.col] = piece
+          game.board[other_piece.row,other_piece.col] = other_piece
+
+          piece.player.has_castled = true
+        else
+          filter!(tmp_piece -> tmp_piece != other_piece, other_piece.player.pieces)
+          game.board[overlay_row,overlay_col] = piece
+        end
       end
 
-      game.board[overlay_row,overlay_col] = piece
+      if piece_name == "king"
+        piece.player.can_castle_left = false
+        piece.player.can_castle_right = false
+      end
+
+      if piece_name == "rook"
+        if piece.player.can_castle_left && piece_col == 1
+          piece.player.can_castle_left = false
+        elseif piece.player.can_castle_right && piece_col == 8
+          piece.player.can_castle_right = false
+        end
+      end
 
       build_board!(game)
     end
