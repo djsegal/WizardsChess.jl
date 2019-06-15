@@ -74,5 +74,12 @@ $(document).on("click", ".cs-overlay.active", function(event) {
   overlayRow = tr.id.split("_").slice(-1)[0];
   overlayCol = td.id.split("_").slice(-1)[0];
 
+  if ( $(overlay).hasClass('cs-castle') ) {
+    if( !confirm("Are you sure you want to castle?") ) {
+      event.preventDefault();
+      return;
+    }
+  }
+
   Blink.msg("click_overlay", [pieceRow, pieceCol, overlayRow, overlayCol]);
 })
