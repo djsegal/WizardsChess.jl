@@ -1,8 +1,8 @@
-# Checkmate.jl
+# WizardsChess.jl
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [Checkmate]
+Modules = [WizardsChess]
 ```

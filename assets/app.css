@@ -11,9 +11,9 @@
   height: 6vmin;
 }
 
-.svg-inline--fa {
-  height: 100% !important;
-  width: 100% !important;
+#js-table tr td .svg-inline--fa {
+  height: 100%;
+  width: 100%;
   padding: 20% !important;
   vertical-align: middle;
   -webkit-transition: opacity 0.2s;

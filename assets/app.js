@@ -1,5 +1,5 @@
 
-$(document).on("click", ".svg-inline--fa", function(event) {
+$(document).on("click", "#js-table .svg-inline--fa", function(event) {
   var svg = event.target;
 
   if ( svg.nodeName !== "svg" ) {
@@ -83,3 +83,10 @@ $(document).on("click", ".cs-overlay.active", function(event) {
 
   Blink.msg("click_overlay", [pieceRow, pieceCol, overlayRow, overlayCol]);
 })
+
+$(document).on("click", ".cs-overlay:not(.active)", function(event) {
+  $(".svg-inline--fa").removeClass("active");
+  $(".cs-overlay").removeClass("active");
+})
+
+$('#exampleModal').modal({backdrop: 'static', keyboard: false, show: false});

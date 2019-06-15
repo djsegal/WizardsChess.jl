@@ -1,6 +1,6 @@
-using Checkmate
+using WizardsChess
 using Test
 
-@testset "Checkmate.jl" begin
+@testset "WizardsChess.jl" begin
     # Write your own tests here.
 end

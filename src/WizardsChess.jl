@@ -1,4 +1,4 @@
-module Checkmate
+module WizardsChess
 
   using Revise
   using Blink
@@ -17,6 +17,8 @@ module Checkmate
       @assert piece.row < 8
       direction = -1
     end
+
+    @assert 1 <= piece.row+direction <= 8
 
     board = piece.player.game.board
     moves = []
@@ -203,7 +205,7 @@ module Checkmate
     work_string *= "\$('.cs-overlay').removeClass('active');"
     work_string *= "\$('.cs-overlay').removeClass('cs-capture');"
     work_string *= "\$('.cs-overlay').removeClass('cs-castle');"
-    work_string *= "\$('.svg-inline--fa').remove();"
+    work_string *= "\$('#js-table .svg-inline--fa').remove();"
 
     for i in 1:8
       for j in 1:8
@@ -347,6 +349,13 @@ module Checkmate
         end
       end
 
+      if piece_name == "pawn"
+        if piece.row == 1 || piece.row == 8
+          cur_string = Blink.JSString("\$('#exampleModal').modal({show: true})")
+          @js_(game.window, $cur_string)
+        end
+      end
+
       if piece_name == "king"
         piece.player.can_castle_left = false
         piece.player.can_castle_right = false
@@ -359,6 +368,35 @@ module Checkmate
           piece.player.can_castle_right = false
         end
       end
+
+      build_board!(game)
+    end
+
+    handle(window, "select_piece") do args
+      pawns = filter(piece -> isa(piece,Pawn), vcat(map(player -> player.pieces, game.players)...))
+
+      filter!(pawn -> ( pawn.row == 1 || pawn.row == 8 ), pawns)
+      @assert length(pawns) == 1
+
+      @assert length(args) == 1
+      piece_class = getfield(WizardsChess, Symbol(args[1]))
+
+      pawn = pawns[1]
+
+      filter!(tmp_piece -> tmp_piece != pawn, pawn.player.pieces)
+
+      piece = piece_class(pawn.player, pawn.row, pawn.col)
+      push!(pawn.player.pieces, piece)
+
+      game.board[pawn.row,pawn.col] = piece
+      build_board!(game)
+
+      cur_string = Blink.JSString("\$('#exampleModal').modal('hide')")
+      @js_(game.window, $cur_string)
+    end
+
+    handle(window, "new_game") do args
+      game = Game(window)
 
       build_board!(game)
     end
