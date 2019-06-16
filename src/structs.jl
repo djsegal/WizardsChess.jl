@@ -9,6 +9,12 @@ mutable struct Pawn <: Piece
   col::Int
 end
 
+mutable struct AntiPawn <: Piece
+  player::AbstractPlayer
+  row::Int
+  col::Int
+end
+
 mutable struct Bishop <: Piece
   player::AbstractPlayer
   row::Int
@@ -44,6 +50,9 @@ mutable struct Game <: AbstractGame
   players::Vector{AbstractPlayer}
   board::Matrix{Union{Nothing,Piece}}
   is_whites_turn::Bool
+  history::Vector{AbstractString}
+  halfmove_clock::Int
+  fullmove_number::Int
 end
 
 mutable struct Player <: AbstractPlayer
@@ -53,10 +62,11 @@ mutable struct Player <: AbstractPlayer
   can_castle_left::Bool
   can_castle_right::Bool
   has_castled::Bool
+  anti_pawn::Union{Nothing,AntiPawn}
 end
 
 function Player(is_white,game)
-  Player(is_white,[],game,true,true,false)
+  Player(is_white,[],game,true,true,false,nothing)
 end
 
 function Game(window::Window)
@@ -65,7 +75,8 @@ function Game(window::Window)
   board = Matrix{Union{Nothing,Piece}}(nothing,8,8)
 
   game = Game(
-    window,players,board,true
+    window,players,board,true,
+    [], 0, 1
   )
 
   white = Player(true,game)

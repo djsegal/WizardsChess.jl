@@ -2,203 +2,21 @@ module WizardsChess
 
   using Revise
   using Blink
+  using Chess
 
   include("structs.jl")
+  include("valid_moves.jl")
+
+  characters = [
+  "a", "b", "c", "d",
+  "e", "f", "g", "h"
+  ]
+
+  algebraic_notation = function (row,col)
+      characters[col] * string(row)
+  end
 
   export start
-
-  function valid_moves(piece::Pawn)
-    is_white = piece.player.is_white
-
-    if is_white
-      @assert piece.row > 1
-      direction = +1
-    else
-      @assert piece.row < 8
-      direction = -1
-    end
-
-    @assert 1 <= piece.row+direction <= 8
-
-    board = piece.player.game.board
-    moves = []
-
-    work_i, work_j = piece.row+direction, piece.col
-    isnothing(piece.player.game.board[work_i,work_j]) && push!(moves, [work_i, work_j])
-
-    is_init = (
-      ( is_white && piece.row == 2 ) ||
-      ( !is_white && piece.row == 7 )
-    )
-
-    if is_init
-      work_i, work_j = piece.row+2*direction, piece.col
-      isnothing(piece.player.game.board[work_i,work_j]) && push!(moves, [work_i, work_j])
-    end
-
-    work_i = piece.row+direction
-    for work_j in piece.col .+ [-1,+1]
-      ( 1 <= work_j <= 8 ) || continue
-      isnothing(piece.player.game.board[work_i,work_j]) && continue
-      ( board[work_i,work_j].player == piece.player ) && continue
-      push!(moves, [work_i, work_j])
-    end
-
-    moves
-  end
-
-  function _valid_moves_straight(piece::Piece)
-    board = piece.player.game.board
-    moves = []
-
-    work_j = piece.col
-
-    for work_i in piece.row-1:-1:1
-      push!(moves, [work_i, work_j])
-      isnothing(board[work_i,work_j]) && continue
-      ( board[work_i,work_j].player == piece.player ) || break
-      pop!(moves) ; break
-    end
-
-    for work_i in piece.row+1:+1:8
-      push!(moves, [work_i, work_j])
-      isnothing(board[work_i,work_j]) && continue
-      ( board[work_i,work_j].player == piece.player ) || break
-      pop!(moves) ; break
-    end
-
-    work_i = piece.row
-
-    for work_j in piece.col-1:-1:1
-      push!(moves, [work_i, work_j])
-      isnothing(board[work_i,work_j]) && continue
-      ( board[work_i,work_j].player == piece.player ) || break
-      pop!(moves) ; break
-    end
-
-    for work_j in piece.col+1:+1:8
-      push!(moves, [work_i, work_j])
-      isnothing(board[work_i,work_j]) && continue
-      ( board[work_i,work_j].player == piece.player ) || break
-      pop!(moves) ; break
-    end
-
-    moves
-  end
-
-  function valid_moves(piece::Knight)
-    board = piece.player.game.board
-    moves = []
-
-    for work_i in piece.row .+ [+1,-1]
-      ( 1 <= work_i <= 8 ) || continue
-      for work_j in piece.col .+ [+2,-2]
-        ( 1 <= work_j <= 8 ) || continue
-        is_valid = isnothing(piece.player.game.board[work_i,work_j])
-        is_valid || ( is_valid = ( board[work_i,work_j].player != piece.player ) )
-        is_valid && push!(moves, [work_i, work_j])
-      end
-    end
-
-    for work_i in piece.row .+ [+2,-2]
-      ( 1 <= work_i <= 8 ) || continue
-      for work_j in piece.col .+ [+1,-1]
-        ( 1 <= work_j <= 8 ) || continue
-        is_valid = isnothing(piece.player.game.board[work_i,work_j])
-        is_valid || ( is_valid = ( board[work_i,work_j].player != piece.player ) )
-        is_valid && push!(moves, [work_i, work_j])
-      end
-    end
-
-    moves
-  end
-
-  valid_moves(piece::Bishop) = _valid_moves_diagonal(piece)
-
-  function valid_moves(piece::Rook)
-    moves = _valid_moves_straight(piece)
-    ( piece.player.can_castle_left || piece.player.can_castle_right ) || return moves
-    piece.player.has_castled && return moves
-
-    if piece.player.is_white
-      work_i = 1
-    else
-      work_i = 8
-    end
-
-    king = piece.player.pieces[findfirst(work_piece -> isa(work_piece,King), piece.player.pieces)]
-
-    ( piece.row == work_i ) || return moves
-    ( king.row == work_i ) || return moves
-
-    @assert king.col == 5
-
-    if piece.col < king.col
-      j_list = piece.col+1:king.col-1
-    else
-      j_list = king.col+1:piece.col-1
-    end
-
-    for work_j in j_list
-      isnothing(piece.player.game.board[work_i,work_j]) || return moves
-    end
-
-    push!(moves, [king.row,king.col])
-
-    moves
-  end
-
-  valid_moves(piece::Queen) = vcat(
-    _valid_moves_straight(piece), _valid_moves_diagonal(piece)
-  )
-
-  function _valid_moves_diagonal(piece::Piece)
-    board = piece.player.game.board
-    moves = []
-
-    for i_dir = [-1,+1]
-      for j_dir = [-1,+1]
-        work_i = piece.row + i_dir
-        work_j = piece.col + j_dir
-
-        while 1 <= work_i <= 8 && 1 <= work_j <= 8
-          if isnothing(piece.player.game.board[work_i,work_j])
-            push!(moves, [work_i, work_j])
-          elseif board[work_i,work_j].player == piece.player
-            break
-          else
-            push!(moves, [work_i, work_j])
-            break
-          end
-
-          work_i += i_dir
-          work_j += j_dir
-        end
-      end
-    end
-
-    moves
-  end
-
-  function valid_moves(piece::King)
-    board = piece.player.game.board
-    moves = []
-
-    for work_i in piece.row .+ (-1:+1)
-      ( 1 <= work_i <= 8 ) || continue
-      for work_j in piece.col .+ (-1:+1)
-        ( 1 <= work_j <= 8 ) || continue
-
-        if !isnothing(piece.player.game.board[work_i,work_j]) && board[work_i,work_j].player == piece.player
-          continue
-        end
-
-        push!(moves, [work_i, work_j])
-      end
-    end
-
-    moves
-  end
 
   function build_board!(game)
     work_string = "";
@@ -221,8 +39,77 @@ module WizardsChess
       end
     end
 
+    for player in game.players
+      isnothing(player.anti_pawn) && continue
+      piece_color = player.is_white ? "white" : "black"
+
+      work_string *= """
+        \$("#js-row__$(player.anti_pawn.row) #js-col__$(player.anti_pawn.col)").prepend('<i class="fas fa-circle cs-$(piece_color)"></i>');
+      """
+    end
+
     cur_string = Blink.JSString(work_string)
     @js_(game.window, $cur_string)
+  end
+
+  function fen(game::Game)
+    fen = ""
+
+    string_array = []
+    for row in 8:-1:1
+      push!(string_array, "")
+      white_space = 0
+      for col in 1:8
+        tmp_piece = game.board[row,col]
+
+        if isnothing(tmp_piece)
+          white_space += 1
+          continue
+        end
+
+        if white_space > 0
+          string_array[end] *= string(white_space)
+          white_space = 0
+        end
+
+        tmp_piece_name = lowercase(last(split(string(typeof(tmp_piece)),".")))
+        piece_char = tmp_piece_name == "knight" ? "n" : tmp_piece_name[1]
+        piece_char = ( tmp_piece.player.is_white ) ? uppercase(piece_char) : lowercase(piece_char)
+
+        string_array[end] *= piece_char
+      end
+      ( white_space > 0 ) && ( string_array[end] *= string(white_space) )
+    end
+
+    fen *= join(string_array, "/")
+
+    fen *= game.is_whites_turn ? " w" : " b"
+
+    white = filter(player -> player.is_white, game.players)[1]
+    black = filter(player -> !player.is_white, game.players)[1]
+
+    castling_string = ""
+
+    white.can_castle_right && ( castling_string *= "K" )
+    white.can_castle_left && ( castling_string *= "Q" )
+    black.can_castle_right && ( castling_string *= "k" )
+    black.can_castle_left && ( castling_string *= "q" )
+
+    ( castling_string == "" ) && ( castling_string = "-" )
+
+    fen *= " " * castling_string * " "
+
+    if game.is_whites_turn
+      fen *= isnothing(black.anti_pawn) ? "-" : algebraic_notation(black.anti_pawn.row,black.anti_pawn.col)
+    else
+      fen *= isnothing(white.anti_pawn) ? "-" : algebraic_notation(white.anti_pawn.row,white.anti_pawn.col)
+    end
+
+    fen *= " " * string(game.halfmove_clock)
+
+    fen *= " " * string(game.fullmove_number)
+
+    fen
   end
 
   function start()
@@ -267,9 +154,15 @@ module WizardsChess
 
     build_board!(game)
 
+    println(fen(game))
+
     handle(window, "click_piece") do args
       row, col = map(arg -> parse(Int,arg),args)
-      moves = valid_moves(game.board[row,col])
+      piece = game.board[row,col]
+
+      # ( piece.player.is_white == game.is_whites_turn ) || return
+
+      moves = valid_moves(piece)
 
       work_string = """
         var thisIsWhite = \$("#js-row__$(row) #js-col__$(col) .svg-inline--fa").hasClass("cs-white");
@@ -304,8 +197,12 @@ module WizardsChess
     end
 
     handle(window, "click_overlay") do args
+      game.halfmove_clock += 1
+
       piece_row, piece_col, overlay_row, overlay_col = map(arg -> parse(Int,arg),args)
       piece = game.board[piece_row,piece_col]
+
+      # @assert piece.player.is_white == game.is_whites_turn
 
       moves = valid_moves(piece)
       @assert [overlay_row,overlay_col] in moves
@@ -313,6 +210,7 @@ module WizardsChess
       piece.row = overlay_row
       piece.col = overlay_col
 
+      piece.player.anti_pawn = nothing
       game.board[piece_row,piece_col] = nothing
 
       piece_name = lowercase(last(split(string(typeof(piece)),".")))
@@ -343,16 +241,55 @@ module WizardsChess
           game.board[other_piece.row,other_piece.col] = other_piece
 
           piece.player.has_castled = true
+          piece.player.can_castle_left = false
+          piece.player.can_castle_right = false
         else
           filter!(tmp_piece -> tmp_piece != other_piece, other_piece.player.pieces)
           game.board[overlay_row,overlay_col] = piece
+          ( piece_name == "pawn" ) || ( game.halfmove_clock -= 1 )
         end
       end
 
       if piece_name == "pawn"
+        game.halfmove_clock -= 1
         if piece.row == 1 || piece.row == 8
           cur_string = Blink.JSString("\$('#exampleModal').modal({show: true})")
           @js_(game.window, $cur_string)
+        end
+
+        is_white = piece.player.is_white
+
+        is_init = (
+          ( is_white && piece_row == 2 ) ||
+          ( !is_white && piece_row == 7 )
+        )
+
+        if is_init && abs(piece_row - overlay_row) > 1
+          @assert piece_col == overlay_col
+          @assert abs(piece_row - overlay_row) == 2
+          piece.player.anti_pawn = AntiPawn(
+            piece.player, Int((piece_row+overlay_row)/2), piece.col
+          )
+        end
+
+        other_player = filter(tmp_player -> tmp_player != piece.player, game.players)[1]
+
+        anti_pawn = other_player.anti_pawn
+        if !isnothing(anti_pawn) && piece.row == anti_pawn.row && piece.col == anti_pawn.col
+          if piece.player.is_white
+            @assert piece.row == 6
+            captured_pawn = game.board[piece_row,piece.col]
+            @assert !isnothing(captured_pawn)
+
+            captured_pawn_name = lowercase(last(split(string(typeof(captured_pawn)),".")))
+            @assert captured_pawn_name == "pawn"
+            @assert captured_pawn.player == other_player
+
+            game.board[captured_pawn.row,captured_pawn.col] = nothing
+            filter!(tmp_piece -> tmp_piece != captured_pawn_name, other_player.pieces)
+          else
+            @assert piece.row == 3
+          end
         end
       end
 
@@ -368,6 +305,21 @@ module WizardsChess
           piece.player.can_castle_right = false
         end
       end
+
+      if piece.player.is_white
+        game.is_whites_turn = false
+
+        black = filter(player -> !player.is_white, game.players)[1]
+        black.anti_pawn = nothing
+      else
+        game.fullmove_number += 1
+        game.is_whites_turn = true
+
+        white = filter(player -> player.is_white, game.players)[1]
+        white.anti_pawn = nothing
+      end
+
+      println(fen(game))
 
       build_board!(game)
     end

@@ -22,6 +22,11 @@
   z-index: 3;
 }
 
+#js-table tr td .svg-inline--fa.fa-circle {
+  padding: 35% !important;
+  opacity: 0.75 !important;
+}
+
 .svg-inline--fa:hover {
   opacity: 0.75;
 }

@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
+Chess = "cce2a13b-2a77-555d-9efe-82113999a415"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [compat]
