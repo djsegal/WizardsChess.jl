@@ -22,16 +22,18 @@ function valid_moves(piece::Pawn)
   moves = []
 
   work_i, work_j = piece.row+direction, piece.col
-  isnothing(piece.player.game.board[work_i,work_j]) && push!(moves, [work_i, work_j])
+  if isnothing(piece.player.game.board[work_i,work_j])
+    push!(moves, [work_i, work_j])
 
-  is_init = (
-    ( is_white && piece.row == 2 ) ||
-    ( !is_white && piece.row == 7 )
-  )
+    is_init = (
+      ( is_white && piece.row == 2 ) ||
+      ( !is_white && piece.row == 7 )
+    )
 
-  if is_init
-    work_i, work_j = piece.row+2*direction, piece.col
-    isnothing(piece.player.game.board[work_i,work_j]) && push!(moves, [work_i, work_j])
+    if is_init
+      work_i, work_j = piece.row+2*direction, piece.col
+      isnothing(piece.player.game.board[work_i,work_j]) && push!(moves, [work_i, work_j])
+    end
   end
 
   work_i = piece.row+direction

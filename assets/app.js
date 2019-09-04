@@ -1,4 +1,3 @@
-
 $(document).on("click", "#js-table .svg-inline--fa", function(event) {
   var svg = event.target;
 
@@ -74,7 +73,7 @@ $(document).on("click", ".cs-overlay.active", function(event) {
   overlayRow = tr.id.split("_").slice(-1)[0];
   overlayCol = td.id.split("_").slice(-1)[0];
 
-  if ( $(overlay).hasClass('cs-castle') ) {
+  if ( $(overlay).hasClass('cs-castle') && !$(overlay).hasClass('js-auto') ) {
     if( !confirm("Are you sure you want to castle?") ) {
       event.preventDefault();
       return;

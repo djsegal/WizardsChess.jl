@@ -63,13 +63,14 @@ mutable struct Player <: AbstractPlayer
   can_castle_right::Bool
   has_castled::Bool
   anti_pawn::Union{Nothing,AntiPawn}
+  is_human::Bool
 end
 
-function Player(is_white,game)
-  Player(is_white,[],game,true,true,false,nothing)
+function Player(is_white,game,is_human)
+  Player(is_white,[],game,true,true,false,nothing,is_human)
 end
 
-function Game(window::Window)
+function Game(window::Window; player_1_is_human=true, player_2_is_human=false)
 
   players = AbstractPlayer[]
   board = Matrix{Union{Nothing,Piece}}(nothing,8,8)
@@ -79,8 +80,8 @@ function Game(window::Window)
     [], 0, 1
   )
 
-  white = Player(true,game)
-  black = Player(false,game)
+  white = Player(true,game,player_1_is_human)
+  black = Player(false,game,player_2_is_human)
 
   push!(game.players, white)
   push!(game.players, black)

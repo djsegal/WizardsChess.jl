@@ -78,6 +78,10 @@
   opacity: 0.8;
 }
 
+.cs-overlay.disabled {
+  pointer-events: none;
+}
+
 .cs-tile {
   position: relative;
   z-index: 1;
